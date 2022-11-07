@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: {{ .Values.Interceptor.name }}-dply
+  labels:
+    app: {{ .Values.Interceptor.name }}
+spec:
+  replicas: {{ .Values.Interceptor.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.Interceptor.Labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.Interceptor.Labels.app }}  
+    spec:
+      containers:
+        - name: {{ .Values.Interceptor.name }}
+          image: {{ .Values.Interceptor.Container.image }}:{{ .Values.Interceptor.Container.tag }}
+          ports:
+            - containerPort: {{ .Values.Interceptor.Container.port }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.Interceptor.name }}-svc
+spec:
+  type: ClusterIP 
+  selector:
+    app: {{ .Values.Interceptor.Labels.app }}
+  ports:
+    - port: {{ .Values.Interceptor.Container.port }}
+      targetPort: {{ .Values.Interceptor.Container.port }}
+      protocol: {{ .Values.Interceptor.Service.protocol }}
