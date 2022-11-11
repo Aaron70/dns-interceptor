@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include "dns.c"
+#include "dnsApi.c"
 	
 #define PORT	 53
 #define MAXLINE 1024
@@ -23,6 +25,15 @@ char* intToIpv4( int ip){
 	return ipAddress;
 }
 
+void handler(struct DNS_HEADER *dns) {
+	if (isQueryStandart(dns)) {
+		char* test = dnsToJSon(dns);
+		printf("PYTHON");
+		
+	} else {
+		printf("kibana");
+	}
+}
 
 
 // Driver code
@@ -77,6 +88,6 @@ int main() {
 		MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
 			len);
 	printf("Hello message sent.\n");
-		
+	handler(dns);
 	return 0;
 }

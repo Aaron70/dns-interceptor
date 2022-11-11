@@ -19,6 +19,13 @@ struct DNS_HEADER
     unsigned short ans_count; // number of answer entries
     unsigned short auth_count; // number of authority entries
     unsigned short add_count; // number of resource entries
+
+    unsigned  char name[8];
+    unsigned  char type[2];
+    unsigned  char class_[2];
+    unsigned  char ttl[4];
+    unsigned  char rdlength[2];
+    unsigned  char rdata[4];
 };
 
 // Function prototypes
