@@ -11,7 +11,7 @@
 #include "dnsApi.c"
 	
 #define PORT	 53
-#define MAXLINE 1024
+#define MAXLINE 65536
 	
 char* intToIpv4( int ip){
 	char* ipv4[4];
@@ -35,20 +35,20 @@ void handler(struct DNS_HEADER *dns) {
 	}
 }
 
+char* receiveDNSPacket(int sockfd, struct sockaddr_in servaddr, struct sockaddr_in cliaddr) {
 
-// Driver code
-int main() {
-	int sockfd;
-	int buffer[MAXLINE];
-	char *hello = "Hello from server";
+	char* buffer = malloc(MAXLINE);
+	int len, n;
+	len = sizeof(cliaddr); //len is value/result
+	
+	n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
+
+	return &buffer[0];
+}
+
+void listenClient(int sockfd){
+		
 	struct sockaddr_in servaddr, cliaddr;
-		
-	// Creating socket file descriptor
-	if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
-		perror("socket creation failed");
-		exit(EXIT_FAILURE);
-	}
-		
 	memset(&servaddr, 0, sizeof(servaddr));
 	memset(&cliaddr, 0, sizeof(cliaddr));
 		
@@ -62,32 +62,35 @@ int main() {
 			sizeof(servaddr)) < 0 )
 	{
 		perror("bind failed");
+		return;
+	}
+	char* packet = receiveDNSPacket(sockfd, servaddr, cliaddr);
+	struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
+
+	char* json = dnsToJSon(header);
+	printf("JSON: %s", json);
+
+	unsigned short int id = header->id;
+	printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
+}
+
+// Driver code
+int main() {
+	int sockfd;
+	char *hello = "Hello from server";
+		
+	// Creating socket file descriptor
+	if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+		perror("socket creation failed");
 		exit(EXIT_FAILURE);
 	}
-		
-	int len, n;
-	
-	len = sizeof(cliaddr); //len is value/result
-	
-	n = recvfrom(sockfd, (int *)buffer, MAXLINE,
-				MSG_WAITALL, ( struct sockaddr *) &cliaddr,
-				&len);
-	//buffer[n] = '\0';
-	struct DNS_HEADER *dns = (struct DNS_HEADER*)&buffer; 
-	unsigned short int id = dns->id;
-	printf("Number of bytes readed: %d/n",n);
-	printf("ID: %s\n", intToIpv4(dns->id));
-	printf("ID: %hu\n", dns->id);
-	printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
-	printf("Qr: %i\n", 0+dns->qr);
-	printf("Opcode: %i\n", 0+dns->opcode);
-	printf("Query Count: %i\n", 0+dns->q_count);
-	printf("Client : %s\n", buffer);
-	dns->qr = 1;
-	sendto(sockfd, (const char *)dns, sizeof(buffer),
-		MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
-			len);
-	printf("Hello message sent.\n");
-	handler(dns);
+
+	listenClient(sockfd);
+
+	//sendto(sockfd, (const char *)dns, sizeof(buffer),
+	//	MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+	//		len);
+	//printf("Hello message sent.\n");
+	//handler(dns);
 	return 0;
 }
