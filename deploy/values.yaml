@@ -10,3 +10,16 @@ Interceptor:
   Service:
     protocol: UDP
 
+Api:
+  name: dns-api
+  replicas: 1
+  Labels:
+    app: api
+  Container:
+    image: aaronv70/dns-api
+    tag: latest
+    port: 5000
+  Service:
+    port: 443
+    protocol: TCP
+

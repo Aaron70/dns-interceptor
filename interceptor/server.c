@@ -28,7 +28,6 @@ char* intToIpv4( int ip){
 
 void handler(struct DNS_HEADER *dns) {
 	if (isQueryStandart(dns)) {
-		char* test = dnsToJSon(dns);
 		printf("PYTHON");
 		
 	} else {
@@ -69,15 +68,17 @@ void listenClient(int sockfd){
 	char* packet = receiveDNSPacket(sockfd, servaddr, cliaddr, &packetSize);
 	struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
 
-	int encodedLenght = 0;
+	size_t encodedLenght = 0;
 	char* encoded = base64_encode(packet, packetSize, &encodedLenght);
-	char* json = dnsToJSon(header);
-	printf("encoded: %s\n", encoded);
+	char* json = createJSON(encoded);
+	printf("encoded: %s\n", json);
 	
-
 
 	unsigned short int id = header->id;
 	printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
+
+
+	makePostRequest("https://dns-api-svc/api/dns_resolver",json);
 }
 
 // Driver code
