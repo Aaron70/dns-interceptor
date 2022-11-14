@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include "dns.c"
 #include "dnsApi.c"
+#include "base64.c"
 	
 #define PORT	 53
 #define MAXLINE 65536
@@ -35,13 +36,13 @@ void handler(struct DNS_HEADER *dns) {
 	}
 }
 
-char* receiveDNSPacket(int sockfd, struct sockaddr_in servaddr, struct sockaddr_in cliaddr) {
+char* receiveDNSPacket(int sockfd, struct sockaddr_in servaddr, struct sockaddr_in cliaddr, int* packetSize) {
 
 	char* buffer = malloc(MAXLINE);
 	int len, n;
 	len = sizeof(cliaddr); //len is value/result
 	
-	n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
+	*packetSize = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
 
 	return &buffer[0];
 }
@@ -64,11 +65,16 @@ void listenClient(int sockfd){
 		perror("bind failed");
 		return;
 	}
-	char* packet = receiveDNSPacket(sockfd, servaddr, cliaddr);
+	int packetSize = 0;
+	char* packet = receiveDNSPacket(sockfd, servaddr, cliaddr, &packetSize);
 	struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
 
+	int encodedLenght = 0;
+	char* encoded = base64_encode(packet, packetSize, &encodedLenght);
 	char* json = dnsToJSon(header);
-	printf("JSON: %s", json);
+	printf("encoded: %s\n", encoded);
+	
+
 
 	unsigned short int id = header->id;
 	printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
@@ -94,3 +100,4 @@ int main() {
 	//handler(dns);
 	return 0;
 }
+
