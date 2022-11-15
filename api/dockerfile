@@ -1,0 +1,9 @@
+FROM python:3
+
+RUN pip install flask
+
+WORKDIR /home/api
+
+COPYY ./ ./
+
+ENTRYPOINT ["python3","dnsApi.py"]

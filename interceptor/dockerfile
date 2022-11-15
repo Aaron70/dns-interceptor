@@ -1,0 +1,28 @@
+FROM gcc:4.9 AS binaries
+
+WORKDIR /home/server
+
+RUN apt update -y
+
+RUN apt-get install libcurl4-gnutls-dev -y
+
+RUN apt-get install libjansson-dev -y
+
+COPY ./ ./
+
+RUN gcc server.c -o server.o -ljansson -lcurl -std=gnu11
+
+FROM ubuntu
+
+WORKDIR /home/server
+
+RUN apt update -y
+
+RUN apt-get install libcurl4-gnutls-dev -y
+
+RUN apt-get install libjansson-dev -y
+
+
+COPY --from=binaries /home/server/server.o ./server.o
+
+ENTRYPOINT ["./server.o"]

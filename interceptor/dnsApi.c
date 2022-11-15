@@ -34,30 +34,13 @@ void makePostRequest(char* url, char* json) {
 }
 
 
-char* dnsToJSon(struct DNS_HEADER *dns) {
+char* createJSON(char *encoded) {
   
   char* s = NULL;
   
   json_t *root = json_object();
-  json_t *json_arr = json_array(); 
   
-  json_object_set_new( root, "id", json_integer( dns->id ) );
-  json_object_set_new( root, "rd", json_integer(dns->rd));
-  json_object_set_new( root, "tc", json_integer(dns->tc));
-  json_object_set_new( root, "aa", json_integer(dns->aa));
-  json_object_set_new( root, "opcode", json_integer(dns->opcode));
-  json_object_set_new( root, "qr", json_integer(dns->qr));
-
-  json_object_set_new( root, "rcode", json_integer(dns->rcode));
-  json_object_set_new( root, "cd", json_integer(dns->cd));
-  json_object_set_new( root, "ad", json_integer(dns->ad));
-  json_object_set_new( root, "z", json_integer(dns->z));
-  json_object_set_new( root, "ra", json_integer(dns->ra));
-
-  json_object_set_new( root, "q_count", json_integer(dns->q_count));
-  json_object_set_new( root, "ans_count", json_integer(dns->ans_count));
-  json_object_set_new( root, "auth_count", json_integer(dns->auth_count));
-  json_object_set_new( root, "add_count", json_integer(dns->add_count));
+  json_object_set_new( root, "data", json_string( encoded ) );
   
   s = json_dumps(root, 0);
   puts(s);
