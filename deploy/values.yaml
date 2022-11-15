@@ -20,6 +20,6 @@ Api:
     tag: latest
     port: 5000
   Service:
-    port: 443
+    port: 80
     protocol: TCP
 

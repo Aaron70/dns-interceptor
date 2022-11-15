@@ -4,6 +4,8 @@ RUN pip install flask
 
 WORKDIR /home/api
 
-COPYY ./ ./
+COPY ./ ./
 
-ENTRYPOINT ["python3","dnsApi.py"]
+#ENTRYPOINT ["python3","dnsApi.py"]
+ENTRYPOINT ["tail","-f","/dev/null"]
+

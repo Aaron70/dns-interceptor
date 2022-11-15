@@ -25,4 +25,5 @@ RUN apt-get install libjansson-dev -y
 
 COPY --from=binaries /home/server/server.o ./server.o
 
-ENTRYPOINT ["./server.o"]
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]

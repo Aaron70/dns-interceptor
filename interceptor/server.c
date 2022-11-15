@@ -46,6 +46,23 @@ char* receiveDNSPacket(int sockfd, struct sockaddr_in servaddr, struct sockaddr_
 	return &buffer[0];
 }
 
+char* getHostName(char* packet, int packetSize) {
+
+	int headerSize = sizeof(struct DNS_HEADER);
+	int len = packet[headerSize];
+	printf("Num: %i\n",len);	
+	printf("Host: ");
+	for( int i = headerSize; i < packetSize; i++){
+		if ( packet[i] < 30) {
+			printf("%i", packet[i]);
+		}else{
+			printf("%c", packet[i]);
+		}
+	}
+	printf("\n");
+	return "";
+}
+
 void listenClient(int sockfd){
 		
 	struct sockaddr_in servaddr, cliaddr;
@@ -73,12 +90,21 @@ void listenClient(int sockfd){
 	char* json = createJSON(encoded);
 	printf("encoded: %s\n", json);
 	
+	getHostName(packet, packetSize);
 
 	unsigned short int id = header->id;
 	printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
 
 
-	makePostRequest("https://dns-api-svc/api/dns_resolver",json);
+	encoded = makePostRequest("http://dns-api-svc/api/dns_resolver",json);
+	printf("Response: %s\n",encoded);
+
+	size_t decodedLen = 0;
+	char* decoded = base64_decode(encoded, strlen(encoded), &decodedLen); 
+
+        sendto(sockfd, (const char *)encoded, decodedLen,
+		MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+			sizeof(cliaddr));
 }
 
 // Driver code
