@@ -3,22 +3,22 @@ import socket
 from dnslib import DNSRecord
 
 def base64Encoder(data):
-    data_bytes = data.encode()
-    data_b64 = base64.b64encode(data_bytes)
-    data_b64_string = data_b64.decode()
-    return data_b64_string
+    message = data
+    message_bytes = message.encode('ascii')
+    base64_bytes = base64.b64encode(message_bytes)
+    base64_message = base64_bytes.decode('ascii')
+    return base64_message
 
 def base64Decoder(data):
-    data_b64 = data.encode()
-    data_bytes = base64.b64decode(data_b64)
-    data_string = data_bytes.decode()
-    return data_string
+    base64_img_bytes = data.encode('utf-8')
+    decoded = base64.decodebytes(base64_img_bytes)
+    return decoded
 
 
 def socketUdp(query):
     #msgFromClient       = fun2()
-    bytesToSend         = str.encode(query)
-    serverAddressPort   = ("127.0.0.1", 53)
+    bytesToSend         = query
+    serverAddressPort   = ("8.8.8.8", 53)
     bufferSize          = 1024
 
     # Create a UDP socket at client side
@@ -32,5 +32,5 @@ def socketUdp(query):
 
     #c = BitArray(hex= msgFromServer[0])
     #print(c.bin)
-    print(d)
-    return d
+    print ("Valor : ",d)
+    return msgFronServer[0]
