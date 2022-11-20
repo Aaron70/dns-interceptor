@@ -65,6 +65,23 @@ char* getHostName(char* packet, int packetSize) {
 	return host;
 }
 
+char* getHostName(char* packet, int packetSize) {
+
+	int headerSize = sizeof(struct DNS_HEADER);
+	int len = packet[headerSize];
+	printf("Num: %i\n",len);	
+	printf("Host: ");
+	for( int i = headerSize; i < packetSize; i++){
+		if ( packet[i] < 30) {
+			printf("%i", packet[i]);
+		}else{
+			printf("%c", packet[i]);
+		}
+	}
+	printf("\n");
+	return "";
+}
+
 void listenClient(int sockfd){
 		
 	struct sockaddr_in servaddr, cliaddr;
