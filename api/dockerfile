@@ -1,9 +1,12 @@
 FROM python:3
 
-RUN pip install flask
+RUN pip install flask dnslib
+
 
 WORKDIR /home/api
 
-COPYY ./ ./
+COPY ./ ./
 
 ENTRYPOINT ["python3","dnsApi.py"]
+#ENTRYPOINT ["tail","-f","/dev/null"]
+

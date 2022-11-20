@@ -1,4 +1,3 @@
-// Server side implementation of UDP client-server model
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,15 +34,35 @@ void handler(struct DNS_HEADER *dns) {
 	}
 }
 
-char* receiveDNSPacket(int sockfd, struct sockaddr_in servaddr, struct sockaddr_in cliaddr, int* packetSize) {
+char* receiveDNSPacket(int sockfd, struct sockaddr_in *cliaddr, int* packetSize) {
 
 	char* buffer = malloc(MAXLINE);
 	int len, n;
 	len = sizeof(cliaddr); //len is value/result
 	
-	*packetSize = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
+	*packetSize = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL, ( struct sockaddr *) cliaddr, &len);
+	//sendto(sockfd, (const char *)buffer,*packetSize,
+	//	MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+	//		sizeof(cliaddr));
 
-	return &buffer[0];
+
+	return buffer;
+}
+
+char* getHostName(char* packet, int packetSize) {
+
+	int headerSize = sizeof(struct DNS_HEADER) + 1;
+	int len = strlen(&packet[headerSize]);
+	char* host = malloc(len+1);
+	for( int i = 0; i <= len; i++){
+		if ( packet[headerSize + i] > 30) {
+			host[i] = packet[headerSize + i];
+		}else{
+			host[i] = '.';
+		}
+	}
+	host[len] = '\0';
+	return host;
 }
 
 void listenClient(int sockfd){
@@ -64,27 +83,46 @@ void listenClient(int sockfd){
 		perror("bind failed");
 		return;
 	}
-	int packetSize = 0;
-	char* packet = receiveDNSPacket(sockfd, servaddr, cliaddr, &packetSize);
-	struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
+	while(1)
+	{
+		int packetSize = 0;
+		char* packet = receiveDNSPacket(sockfd, &cliaddr, &packetSize);
 
-	size_t encodedLenght = 0;
-	char* encoded = base64_encode(packet, packetSize, &encodedLenght);
-	char* json = createJSON(encoded);
-	printf("encoded: %s\n", json);
+		//char* hostName = getHostName(packet, packetSize);
+		//int hostLen = strlen(hostName);
+		//char*	trash =   ".default.svc.cluster.local";
+		//memset(&packet[sizeof(struct DNS_HEADER) + 1 + (strlen(hostName) - strlen(trash) )],0,strlen(trash));
+		//hostName = getHostName(packet, packetSize);
+
+		//struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
+		size_t encodedLenght = 0;
+		char* encoded = base64_encode(packet, packetSize, &encodedLenght);
+		char* json = createJSON(encoded);
+		//printf("encode: %s\n", json);
 	
+		//printf("HostName: %s\n", hostName);
 
-	unsigned short int id = header->id;
-	printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
+		//unsigned short int id = header->id;
+		//printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
 
 
-	makePostRequest("https://dns-api-svc/api/dns_resolver",json);
+		encoded = makePostRequest("http://dns-api-svc/api/dns_resolver",json);
+		//printf("Response: %s\n",encoded);
+
+		size_t decodedLen = 0;
+		char* decoded = base64_decode(encoded, strlen(encoded), &decodedLen); 
+		printf("DecodedLen: %i\n", (int)decodedLen);
+
+		sendto(sockfd, (const char *)decoded, (int)decodedLen,
+			MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+				sizeof(cliaddr));
+	}
+
 }
 
 // Driver code
 int main() {
 	int sockfd;
-	char *hello = "Hello from server";
 		
 	// Creating socket file descriptor
 	if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
@@ -94,11 +132,6 @@ int main() {
 
 	listenClient(sockfd);
 
-	//sendto(sockfd, (const char *)dns, sizeof(buffer),
-	//	MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
-	//		len);
-	//printf("Hello message sent.\n");
-	//handler(dns);
 	return 0;
 }
 

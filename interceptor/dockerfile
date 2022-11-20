@@ -22,7 +22,11 @@ RUN apt-get install libcurl4-gnutls-dev -y
 
 RUN apt-get install libjansson-dev -y
 
+RUN apt install dnsutils vim -y
 
-COPY --from=binaries /home/server/server.o ./server.o
 
-ENTRYPOINT ["./server.o"]
+COPY --from=binaries /home/server/ ./
+
+
+#ENTRYPOINT ["./server.o"]
+ENTRYPOINT ["tail", "-f", "/proc/1/fd/1"]
