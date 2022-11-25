@@ -80,7 +80,6 @@ char* createJSON(char *encoded) {
   json_object_set_new( root, "data", json_string( encoded ) );
   
   s = json_dumps(root, 0);
-  puts(s);
   json_decref(root);
   
  return s;

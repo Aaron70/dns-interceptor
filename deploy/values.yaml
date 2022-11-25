@@ -23,3 +23,24 @@ Api:
     port: 80
     protocol: TCP
 
+Client:
+  name: dns-client
+  replicas: 1
+  Labels:
+    app: client 
+  Container:
+    image: aaronv70/dns-client
+    tag: latest
+
+Elasticsearch:
+  name: dns-db
+  replicas: 1
+  Labels:
+    app: elasticsearch 
+  Container:
+    image: docker.elastic.co/elasticsearch/elasticsearch
+    tag: 7.2.0
+    port: 9200
+  Service:
+    port: 9200
+    protocol: TCP

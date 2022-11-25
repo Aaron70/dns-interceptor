@@ -1,0 +1,7 @@
+FROM ubuntu
+
+RUN apt update -y && apt upgrade -y
+
+RUN apt install vim dnsutils net-tools curl -y
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]

@@ -65,22 +65,20 @@ char* getHostName(char* packet, int packetSize) {
 	return host;
 }
 
-char* getHostName(char* packet, int packetSize) {
+void printRequest(char* packet, int packetSize){
+	struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
+	char* hostName = getHostName(packet, packetSize);
+	unsigned short int id = header->id;
 
-	int headerSize = sizeof(struct DNS_HEADER);
-	int len = packet[headerSize];
-	printf("Num: %i\n",len);	
-	printf("Host: ");
-	for( int i = headerSize; i < packetSize; i++){
-		if ( packet[i] < 30) {
-			printf("%i", packet[i]);
-		}else{
-			printf("%c", packet[i]);
-		}
-	}
-	printf("\n");
-	return "";
+	printf("===================Request=====================\n");
+	printf("SIZE: %i\n", packetSize);
+	printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
+	printf("OPCODE: %i\n", header->opcode & 15);
+	printf("QR: %i\n", header->qr & 1 );
+	printf("HOSTNAME: %s\n", getHostName(packet, packetSize));
+	printf("===============================================\n");
 }
+
 
 void listenClient(int sockfd){
 		
@@ -100,39 +98,48 @@ void listenClient(int sockfd){
 		perror("bind failed");
 		return;
 	}
+	printf("The server is listening for request\n");
 	while(1)
 	{
 		int packetSize = 0;
 		char* packet = receiveDNSPacket(sockfd, &cliaddr, &packetSize);
+		if ( packetSize > 0 ){
+			printf("-----------------------------------------------------\nRequest received\n");
+			printRequest(packet, packetSize);
+			//char* hostName = getHostName(packet, packetSize);
+			//int hostLen = strlen(hostName);
+			//char*	trash =   ".default.svc.cluster.local";
+			//memset(&packet[sizeof(struct DNS_HEADER) + 1 + (strlen(hostName) - strlen(trash) )],0,strlen(trash));
+			//hostName = getHostName(packet, packetSize);
 
-		//char* hostName = getHostName(packet, packetSize);
-		//int hostLen = strlen(hostName);
-		//char*	trash =   ".default.svc.cluster.local";
-		//memset(&packet[sizeof(struct DNS_HEADER) + 1 + (strlen(hostName) - strlen(trash) )],0,strlen(trash));
-		//hostName = getHostName(packet, packetSize);
+			//struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
+			size_t encodedLenght = 0;
+			char* encoded = base64_encode(packet, packetSize, &encodedLenght);
+			char* json = createJSON(encoded);
+			printf("encode Len: %s\n", encodedLenght);
+			printf("encode: %s\n", encoded);
+			printf("json: %s\n", json);
 
-		//struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
-		size_t encodedLenght = 0;
-		char* encoded = base64_encode(packet, packetSize, &encodedLenght);
-		char* json = createJSON(encoded);
-		//printf("encode: %s\n", json);
+			//printf("HostName: %s\n", hostName);
 	
-		//printf("HostName: %s\n", hostName);
+			//unsigned short int id = header->id;
+			//printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
 
-		//unsigned short int id = header->id;
-		//printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
+		
+			encoded = makePostRequest("http://dns-api-svc/api/dns_resolver",json);
+			//printf("Response: %s\n",encoded);
+			if ( strlen(encoded) >  0){
 
+				size_t decodedLen = 0;
+				char* decoded = base64_decode(encoded, strlen(encoded), &decodedLen); 
+				printf("DecodedLen: %i\n", (int)decodedLen);
 
-		encoded = makePostRequest("http://dns-api-svc/api/dns_resolver",json);
-		//printf("Response: %s\n",encoded);
-
-		size_t decodedLen = 0;
-		char* decoded = base64_decode(encoded, strlen(encoded), &decodedLen); 
-		printf("DecodedLen: %i\n", (int)decodedLen);
-
-		sendto(sockfd, (const char *)decoded, (int)decodedLen,
-			MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
-				sizeof(cliaddr));
+				sendto(sockfd, (const char *)decoded, (int)decodedLen,
+					MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+						sizeof(cliaddr));
+			}
+		}
+		printf("Request processed\n-----------------------------------------------------\n");
 	}
 
 }
