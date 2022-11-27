@@ -23,5 +23,39 @@ if [[ client -eq 0 && $username == $user ]]; then
    docker push aaronv70/dns-client
 fi
 
+kubectl create -f https://download.elastic.co/downloads/eck/2.5.0/crds.yaml
+
+kubectl apply -f https://download.elastic.co/downloads/eck/2.5.0/operator.yaml
+
+cat <<EOF | kubectl apply -f -
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: quickstart
+spec:
+  version: 8.5.2
+  nodeSets:
+  - name: default
+    count: 1
+    config:
+      node.store.allow_mmap: false
+EOF
+
+cat <<EOF | kubectl apply -f -
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: quickstart
+spec:
+  version: 8.5.2
+  count: 1
+  elasticsearchRef:
+    name: quickstart
+EOF
+
+PASSWORD=$(kubectl get secret quickstart-es-elastic-user -o go-template='{{.data.elastic | base64decode}}')
+
+
+
 helm uninstall dns-interceptor
-helm install dns-interceptor deploy/
+helm install --set password=$PASSWORD dns-interceptor deploy/

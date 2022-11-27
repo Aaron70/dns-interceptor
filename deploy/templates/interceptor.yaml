@@ -19,6 +19,12 @@ spec:
           image: {{ .Values.Interceptor.Container.image }}:{{ .Values.Interceptor.Container.tag }}
           ports:
             - containerPort: {{ .Values.Interceptor.Container.port }}
+          env:
+            - name: "PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key:  password
+                  name: {{ .Release.Name }}-auth 
 
 ---
 

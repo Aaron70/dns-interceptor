@@ -44,3 +44,5 @@ Elasticsearch:
   Service:
     port: 9200
     protocol: TCP
+
+password: password
