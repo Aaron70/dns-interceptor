@@ -27,14 +27,14 @@ char* intToIpv4( int ip){
 	return ipAddress;
 }
 
-void handler(struct DNS_HEADER *dns) {
-	if (isQueryStandart(dns)) {
-		printf("PYTHON");
+// void handler(struct DNS_HEADER *dns) {
+// 	if (isQueryStandart(dns)) {
+// 		printf("PYTHON");
 		
-	} else {
-		printf("kibana");
-	}
-}
+// 	} else {
+// 		printf("kibana");
+// 	}
+// }
 
 char* receiveDNSPacket(int sockfd, struct sockaddr_in *cliaddr, int* packetSize) {
 
@@ -171,9 +171,9 @@ void listenClient(int sockfd){
 			//int hostLen = strlen(hostName);
 			//char*	trash =   ".default.svc.cluster.local";
 			//memset(&packet[sizeof(struct DNS_HEADER) + 1 + (strlen(hostName) - strlen(trash) )],0,strlen(trash));
-			//hostName = getHostName(packet, packetSize);
+			char* hostName = getHostName(packet, packetSize);
 
-			//struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
+			struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
 			size_t encodedLenght = 0;
 			char* encoded = encode(packet, packetSize);
 			char* json = createJSON(encoded);
@@ -186,15 +186,31 @@ void listenClient(int sockfd){
 			//unsigned short int id = header->id;
 			//printf("ID: %hu\n", (id >> 8 ) + ((id & 255) << 8));
 
-		
-			encoded = makePostRequest("http://dns-api-svc/api/dns_resolver",json);
+			//encoded = handler(dns, hostname, json);
+			int handlerValue = handler(header);
+			if (handlerValue == 1) {
+				encoded = makePostRequest("http://dns-api-svc/api/dns_resolver",json);
+			}
+			if (handlerValue == 0) {
+				encoded = kibana(hostName);
+				if (encoded == NULL){
+					handlerValue = 1;
+					encoded = makePostRequest("http://dns-api-svc/api/dns_resolver",json);
+				}
+			}		
+			//encoded = makePostRequest("http://dns-api-svc/api/dns_resolver",json);
 			//printf("Response: %s\n",encoded);
 			if ( strlen(encoded) >  0){
-
+				char* decoded;
 				size_t decodedLen = 0;
-				char* decoded = decode(encoded, strlen(encoded), &decodedLen); 
-				printf("DecodedLen: %i\n", (int)decodedLen);
 
+				if (handlerValue == 1) {
+					decoded = decode(encoded, strlen(encoded), &decodedLen); 
+					printf("DecodedLen: %i\n", (int)decodedLen);
+				}
+				if (handlerValue == 0) {
+					//char* decoded = dec;
+				}
 				sendto(sockfd, (const char *)decoded, (int)decodedLen,
 					MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
 						sizeof(cliaddr));

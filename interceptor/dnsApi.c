@@ -234,13 +234,11 @@ char* createJSON(char *encoded) {
 }
 
 
-char* kibana(char* host, char* jsonEncoded) {
+char* kibana(char* host) {
   char* JSON = makeGetKibana(getUrlSearch(host));
   char* filterJson = filterJsonKibana(JSON);
-
   if (filterJson == NULL) {
-      char* answer = makePostRequest("http://dns-api-svc/api/dns_resolver",jsonEncoded);
-      return answer;
+      return NULL;
   }
 
  return filterJson;
