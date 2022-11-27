@@ -4,7 +4,7 @@ Interceptor:
   Labels:
     app: interceptor
   Container:
-    image: arrokoth20/dns-interceptor
+    image: ingridfa/dns-interceptor
     tag: latest
     port: 53
   Service:
@@ -16,7 +16,7 @@ Api:
   Labels:
     app: api
   Container:
-    image: arrokoth20/dns-api
+    image: ingridfa/dns-api
     tag: latest
     port: 5000
   Service:
@@ -29,7 +29,7 @@ Client:
   Labels:
     app: client 
   Container:
-    image: arrokoth20/dns-client
+    image: ingridfa/dns-client
     tag: latest
 
 Elasticsearch:
