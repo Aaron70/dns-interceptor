@@ -8,9 +8,11 @@ RUN apt-get install libcurl4-gnutls-dev -y
 
 RUN apt-get install libjansson-dev -y
 
+RUN apt-get install libb64-dev -y
+
 COPY ./ ./
 
-RUN gcc server.c -o server.o -ljansson -lcurl -std=gnu11
+RUN gcc server.c -o server.o -ljansson -lcurl -lb64 -std=gnu11
 
 FROM ubuntu
 
@@ -21,6 +23,8 @@ RUN apt update -y
 RUN apt-get install libcurl4-gnutls-dev -y
 
 RUN apt-get install libjansson-dev -y
+
+RUN apt-get install libb64-dev -y
 
 RUN apt install dnsutils vim -y
 

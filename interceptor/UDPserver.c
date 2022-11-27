@@ -26,12 +26,15 @@ char* intToIpv4( int ip){
 	return ipAddress;
 }
 
-void handler(struct DNS_HEADER *dns) {
+void handler(struct DNS_HEADER *dns, char* host, char* jsonEncoded) {
 	if (isQueryStandart(dns)) {
 		printf("PYTHON");
+		char* encoded = makePostRequest("http://dns-api-svc/api/dns_resolver",jsonEncoded);
+		return encoded;
 		
 	} else {
 		printf("kibana");
+		//kibana(dns, host, jsonEncoded);
 	}
 }
 

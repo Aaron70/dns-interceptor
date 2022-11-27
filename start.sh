@@ -1,26 +1,26 @@
-docker build ./interceptor -t aaronv70/dns-interceptor 
+docker build ./interceptor -t arrokoth20/dns-interceptor 
 interceptor=$1
 
-docker build ./api -t aaronv70/dns-api
+docker build ./api -t arrokoth20/dns-api
 api=$1
 
-docker build ./client -t aaronv70/dns-client
+docker build ./client -t arrokoth20/dns-client
 client=$1
 
 # This command was get from: https://stackoverflow.com/questions/29326721/is-there-a-way-to-get-the-docker-hub-username-of-the-current-user
 username=$(docker info | sed '/Username:/!d;s/.* //'); 
-user="aaronv70"
+user="arrokoth20"
 
 if [[ interceptor -eq 0 && $username == $user ]]; then
-   docker push aaronv70/dns-interceptor
+   docker push arrokoth20/dns-interceptor
 fi
 
 if [[ api -eq 0 && $username == $user ]]; then
-   docker push aaronv70/dns-api
+   docker push arrokoth20/dns-api
 fi
 
 if [[ client -eq 0 && $username == $user ]]; then
-   docker push aaronv70/dns-client
+   docker push arrokoth20/dns-client
 fi
 
 kubectl create -f https://download.elastic.co/downloads/eck/2.5.0/crds.yaml

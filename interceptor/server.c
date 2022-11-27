@@ -9,6 +9,8 @@
 #include "dns.c"
 #include "dnsApi.c"
 #include "base64.c"
+#include <b64/cencode.h>
+#include <b64/cdecode.h>
 	
 #define PORT	 53
 #define MAXLINE 65536
@@ -65,6 +67,65 @@ char* getHostName(char* packet, int packetSize) {
 	return host;
 }
 
+
+char* encode(const char* input, int size)
+{
+        /* set up a destination buffer large enough to hold the encoded data */
+        char* output = (char*)malloc(MAXLINE);
+        /* keep track of our encoded position */
+        char* c = output;
+        /* store the number of bytes encoded by a single call */
+        int cnt = 0;
+        /* we need an encoder state */
+        base64_encodestate s;
+
+        /*---------- START ENCODING ----------*/
+        /* initialise the encoder state */
+        base64_init_encodestate(&s);
+        /* gather data from the input and send it to the output */
+        cnt = base64_encode_block(input, size, c, &s);
+        c += cnt;
+        /* since we have encoded the entire input string, we know that 
+           there is no more input data; finalise the encoding */
+        cnt = base64_encode_blockend(c, &s);
+        c += cnt;
+        /*---------- STOP ENCODING  ----------*/
+
+        /* we want to print the encoded data, so null-terminate it: */
+        *c = 0;
+        
+        return output;
+}
+
+
+char* decode(const char* input, int size, size_t* decodedLen)
+{
+        /* set up a destination buffer large enough to hold the encoded data */
+        char* output = (char*)malloc(MAXLINE);
+        /* keep track of our decoded position */
+        char* c = output;
+        /* store the number of bytes decoded by a single call */
+        int cnt = 0;
+        /* we need a decoder state */
+        base64_decodestate s;
+
+        /*---------- START DECODING ----------*/
+        /* initialise the decoder state */
+        base64_init_decodestate(&s);
+        /* decode the input data */
+        cnt = base64_decode_block(input, size, c, &s);
+        c += cnt;
+        /* note: there is no base64_decode_blockend! */
+        /*---------- STOP DECODING  ----------*/
+
+        /* we want to print the decoded data, so null-terminate it: */
+        *c = 0;
+        *decodedLen = cnt;
+
+        return output;
+}
+
+
 void printRequest(char* packet, int packetSize){
 	struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
 	char* hostName = getHostName(packet, packetSize);
@@ -114,9 +175,9 @@ void listenClient(int sockfd){
 
 			//struct DNS_HEADER *header = (struct DNS_HEADER*)packet;
 			size_t encodedLenght = 0;
-			char* encoded = base64_encode(packet, packetSize, &encodedLenght);
+			char* encoded = encode(packet, packetSize);
 			char* json = createJSON(encoded);
-			printf("encode Len: %s\n", encodedLenght);
+			//printf("encode Len: %s\n", encodedLenght);
 			printf("encode: %s\n", encoded);
 			printf("json: %s\n", json);
 
@@ -131,7 +192,7 @@ void listenClient(int sockfd){
 			if ( strlen(encoded) >  0){
 
 				size_t decodedLen = 0;
-				char* decoded = base64_decode(encoded, strlen(encoded), &decodedLen); 
+				char* decoded = decode(encoded, strlen(encoded), &decodedLen); 
 				printf("DecodedLen: %i\n", (int)decodedLen);
 
 				sendto(sockfd, (const char *)decoded, (int)decodedLen,

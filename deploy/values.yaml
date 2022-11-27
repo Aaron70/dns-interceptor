@@ -4,7 +4,7 @@ Interceptor:
   Labels:
     app: interceptor
   Container:
-    image: aaronv70/dns-interceptor
+    image: arrokoth20/dns-interceptor
     tag: latest
     port: 53
   Service:
@@ -16,7 +16,7 @@ Api:
   Labels:
     app: api
   Container:
-    image: aaronv70/dns-api
+    image: arrokoth20/dns-api
     tag: latest
     port: 5000
   Service:
@@ -29,7 +29,7 @@ Client:
   Labels:
     app: client 
   Container:
-    image: aaronv70/dns-client
+    image: arrokoth20/dns-client
     tag: latest
 
 Elasticsearch:
