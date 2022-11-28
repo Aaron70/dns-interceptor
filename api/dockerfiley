@@ -1,0 +1,13 @@
+FROM python:3
+
+RUN pip install flask dnslib
+
+RUN pip install python-dotenv
+
+WORKDIR /home/api
+
+ENV DNS_IP=8.8.8.8
+
+COPY ./ ./
+
+ENTRYPOINT ["python3","dnsApi.py"]
